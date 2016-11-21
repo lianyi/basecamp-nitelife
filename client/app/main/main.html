@@ -35,7 +35,10 @@
                   </div>
               </div>
              <div class="col-xs-3 col-sm-2 col-md-2 pull-right">
-               <button class="btn btn-md btn-default" ng-click="$ctrl.changeGoing(bar)"> Going <span
+               <button class="btn btn-md"
+
+                       ng-class="{'btn-primary': $ctrl.amIGoing(bar),'btn-default': ! $ctrl.amIGoing(bar)}"
+                       ng-click="$ctrl.changeGoing(bar)">{{bar.visitorsCount}} Going <span
                  class="glyphicon glyphicon-heart-empty"></span></button>
              </div>
           </span>
@@ -44,3 +47,7 @@
     </div>
   </div>
 </div>
+
+
+<!--ng-class="{'btn-primary':bar.amIGoing,'btn-default':!bar.amIGoing }"-->
+<!--ng-class="{'btn-primary':bar.amIGoing,'btn-default':!bar.amIGoing }"-->

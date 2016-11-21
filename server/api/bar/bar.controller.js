@@ -110,8 +110,6 @@ export function upsertVisitor(req, res) {
   Bar.findOne({yelpId: req.params.id}).exec().then(
     function (bar) {
       if (!bar) {//make a new one
-        console.info(bar, req.params, 1);
-
         return Bar.create({
           yelpId: req.params.id,
           visitors: [req.params.user_id],
@@ -190,13 +188,14 @@ export function search(req, res) {
           return mapData[d.yelpId] = d;
         });
 
-        for(let i = 0;i< data.businesses.length;i++){
-          data.businesses[i].visitors = mapData[data.businesses[i].id] ? mapData[data.businesses[i].id].visitors : [];
-          data.businesses[i].visitorsCount = mapData[data.businesses[i].id] ? mapData[data.businesses[i].id].visitorsCount : 0;
-          if (req.user && req.user.user_id) {
-            data.businesses[i].imgoing = (_.indexOf(data.businesses[i].visitors, req.user.user_id) >= 0);
+        data.businesses.forEach(function (d) {
+          d.visitors = mapData[d.id] ? mapData[d.id].visitors : [];
+          d.visitorsCount = mapData[d.id] ? mapData[d.id].visitorsCount : 0;
+          if (req.user && req.user._id) {
+            d.imgoing = (_.indexOf(d.visitors, req.user._id) >= 0);
           }
-        }
+        });
+
         return res.json(data);
       }
     });
