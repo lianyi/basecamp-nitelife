@@ -13,7 +13,7 @@
 
 import jsonpatch from 'fast-json-patch';
 import Bar from './bar.model';
-
+import _ from 'lodash';
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -107,40 +107,35 @@ export function upsertVisitor(req, res) {
   if (req.body._id) {
     delete req.body._id;
   }
+  Bar.findOne({yelpId: req.params.id}).exec().then(
+    function (bar) {
+      if (!bar) {//make a new one
+        console.info(bar, req.params, 1);
 
-  Bar.findOne({_id: req.params.id}, function (err, bar) {
-    if (err) {
-      return handleError(res, err);
-    }
-    if (!bar) {//make a new one
-      const _bar = new Bar({
-        _id: req.params.id,
-        yelpId: req.params.id,
-        visitors: [req.params.user_id],
-        visotorsCount: 1
-      });
-      _bar.save(function (err, data) {
-        if (err) {
-          return handleError(res, err);
+        return Bar.create({
+          yelpId: req.params.id,
+          visitors: [req.params.user_id],
+          visitorsCount: 1
+        }).then(respondWithResult(res, 201)).catch(handleError(res));
+      } else {//update existing one
+
+        const idx = _.indexOf(bar.visitors, req.params.user_id);
+        if (idx >= 0) {
+          bar.visitors.splice(idx, 1);
+        } else {
+          bar.visitors.push(req.params.user_id);
         }
-        return res.status(201).json(data);
-      })
-    } else {//update existing one
-      const idx = _.indexOf(bar.visitors, req.user.user_id);
-      if (idx >= 0) {
-        bar.visitors.splice(idx, 1);
-      } else {
-        bar.visitors.push(req.user.user_id);
+        bar.visitorsCount = bar.visitors.length;
+        console.info(bar);
+        return Bar.findOneAndUpdate({_id: bar._id}, bar, {
+          upsert: true,
+          setDefaultsOnInsert: true,
+          runValidators: true
+        }).exec()
+          .then(respondWithResult(res))
+          .catch(handleError(res));
       }
-      bar.visitorsCount = bar.visotors.length;
-      _bar.save(function (err, data) {
-        if (err) {
-          return handleError(res, err);
-        }
-        return res.status(201).json(data);
-      })
-    }
-  });
+    }).catch(handleError(res));
 
 }
 
@@ -204,17 +199,5 @@ export function search(req, res) {
         return res.json(data);
       }
     });
-
-    //
-    // return Bar.findById(req.params.id).exec()
-    //   .then(handleEntityNotFound(res))
-    //   .then(respondWithResult(res))
-    //   .catch(handleError(res));
-    //
-
-
-  })
-    .catch(function (err) {
-      console.error(err);
-    });
+  }).catch(handleError(res));
 }
