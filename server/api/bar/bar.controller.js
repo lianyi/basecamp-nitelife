@@ -180,22 +180,23 @@ export function search(req, res) {
     });
 
     Bar.find({
-      '_id': {$in: yelpIds}
+      'yelpId': {$in: yelpIds}
     }, function (err, docs) {
       if (err) {
         return res.json(data);
       } else {
         let mapData = {};
         docs.map(function (d) {
-          return mapData[d.id] = d;
+          return mapData[d.yelpId] = d;
         });
-        data.forEach(function (d) {
-          d.visitors = mapData[d.id].visitors;
-          d.visitorsCount = mapData[d.id].visitorsCount;
-          if (req.user.user_id) {
-            d.imgoing = (_.indexOf(d.visitors, req.user.user_id) >= 0);
+
+        for(let i = 0;i< data.businesses.length;i++){
+          data.businesses[i].visitors = mapData[data.businesses[i].id] ? mapData[data.businesses[i].id].visitors : [];
+          data.businesses[i].visitorsCount = mapData[data.businesses[i].id] ? mapData[data.businesses[i].id].visitorsCount : 0;
+          if (req.user && req.user.user_id) {
+            data.businesses[i].imgoing = (_.indexOf(data.businesses[i].visitors, req.user.user_id) >= 0);
           }
-        });
+        }
         return res.json(data);
       }
     });
